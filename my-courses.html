@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses - TutorConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <style>
+        :root {
+            --color-background: #0a0b14;
+            --color-primary: #003060;
+            --color-secondary: #055C9D;
+            --color-tertiary: #0E86D4;
+            --color-light: #68BBE3;
+            --color-dark: #151823;
+            --color-glass: rgba(255, 255, 255, 0.1);
+            --gradient-primary: linear-gradient(135deg, var(--color-tertiary), var(--color-secondary));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--color-background), var(--color-dark));
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            color: var(--color-light);
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .course-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .course-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .course-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: var(--color-light);
+        }
+
+        .course-info {
+            margin-bottom: 15px;
+        }
+
+        .course-info p {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .join-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .join-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(14, 134, 212, 0.4);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 50px;
+        }
+
+        #loadingAnimation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #meetingContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        #meetingFrame {
+            width: 90%;
+            height: 90%;
+            border: none;
+            border-radius: 10px;
+        }
+
+        #closeMeeting {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--color-tertiary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingAnimation" style="display: none;">
+        <dotlottie-player src="https://lottie.host/a81ef307-7531-4580-b3ce-5369195af9de/g88KkRKAdW.lottie" background="transparent" speed="1" style="width: 300px; height: 300px" loop autoplay></dotlottie-player>
+    </div>
+    <div class="container">
+        <h1>My Courses</h1>
+        <div id="coursesGrid" class="courses-grid">
+            <!-- Course cards will be dynamically inserted here -->
+        </div>
+    </div>
+    <div id="meetingContainer">
+        <iframe id="meetingFrame" allow="camera; microphone; fullscreen; display-capture; autoplay"></iframe>
+        <button id="closeMeeting">Close Meeting</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qjdpzaezmtsdnnxuphim.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqZHB6YWV6bXRzZG5ueHVwaGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwODQyNzcsImV4cCI6MjA0NjY2MDI3N30.1lCVZaxUsm3uROyKtErN9fYr1KxtaY9yj0jNv1k7WmY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadUserCourses() {
+            try {
+                document.getElementById('loadingAnimation').style.display = 'flex';
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) {
+                    console.error('Session error:', sessionError);
+                    throw new Error('Failed to get user session');
+                }
+
+                if (!session) {
+                    showMessage('Please log in to view your courses', 'error');
+                    return;
+                }
+
+                const userEmail = session.user.email;
+                console.log('User email:', userEmail);
+
+                // Fetch demo requests
+                const { data: demoRequests, error: demoRequestsError } = await supabase
+                    .from('demo_requests')
+                    .select('*')
+                    .eq('email', userEmail)
+                    .eq('status', 'enrolled');
+
+                if (demoRequestsError) {
+                    console.error('Demo requests query error:', demoRequestsError);
+                    throw new Error('Failed to fetch demo requests');
+                }
+
+                // Fetch all tutors
+                const { data: tutors, error: tutorsError } = await supabase
+                    .from('alltutor')
+                    .select('id, name, specialization');
+
+                if (tutorsError) {
+                    console.error('Tutors query error:', tutorsError);
+                    throw new Error('Failed to fetch tutors');
+                }
+
+                // Combine the data
+                const courses = demoRequests.map(request => {
+                    const tutor = tutors.find(t => t.id === request.tutor_id);
+                    return {
+                        ...request,
+                        alltutor: tutor
+                    };
+                });
+
+                console.log('Fetched courses:', courses);
+                displayCourses(courses);
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                showMessage(`Error loading your courses: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loadingAnimation').style.display = 'none';
+            }
+        }
+
+        function displayCourses(courses) {
+            const coursesGrid = document.getElementById('coursesGrid');
+            coursesGrid.innerHTML = '';
+
+            if (courses.length === 0) {
+                coursesGrid.innerHTML = '<p class="loading">You are not enrolled in any courses yet.</p>';
+                return;
+            }
+
+            courses.forEach(course => {
+                const courseCard = document.createElement('div');
+                courseCard.className = 'course-card';
+
+                const nextClassTime = new Date(course.scheduled_time);
+                const formattedTime = nextClassTime.toLocaleString();
+
+                courseCard.innerHTML = `
+                    <h2 class="course-title">${course.alltutor ? course.alltutor.specialization : 'Unknown Specialization'}</h2>
+                    <div class="course-info">
+                        <p><strong>Tutor:</strong> ${course.alltutor ? course.alltutor.name : 'Unknown Tutor'}</p>
+                        <p><strong>Next Class:</strong> ${formattedTime}</p>
+                        <p><strong>Class Type:</strong> ${course.class_type}</p>
+                    </div>
+                    <button class="join-button" onclick="joinClass('${course.meet_link || ''}')">Join Class</button>
+                `;
+
+                coursesGrid.appendChild(courseCard);
+            });
+        }
+
+        async function joinClass(meetLink) {
+            if (!meetLink) {
+                showMessage('Class link is not available yet', 'error');
+                return;
+            }
+
+            const hasPermissions = await checkAndRequestPermissions();
+            if (!hasPermissions) {
+                showMessage('Please allow necessary permissions to join the class', 'error');
+                return;
+            }
+
+            const meetingContainer = document.getElementById('meetingContainer');
+            const meetingFrame = document.getElementById('meetingFrame');
+
+            meetingFrame.src = meetLink;
+            meetingContainer.style.display = 'flex';
+        }
+
+        document.getElementById('closeMeeting').addEventListener('click', () => {
+            const meetingContainer = document.getElementById('meetingContainer');
+            const meetingFrame = document.getElementById('meetingFrame');
+
+            meetingFrame.src = '';
+            meetingContainer.style.display = 'none';
+        });
+
+        async function checkAndRequestPermissions() {
+            const storedPermissions = localStorage.getItem('meetPermissions');
+            if (storedPermissions === 'granted') {
+                return true;
+            }
+
+            try {
+                await Promise.all([
+                    navigator.mediaDevices.getUserMedia({ audio: true, video: true }),
+                    Notification.requestPermission()
+                ]);
+
+                localStorage.setItem('meetPermissions', 'granted');
+                return true;
+            } catch (error) {
+                console.error('Error requesting permissions:', error);
+                return false;
+            }
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.padding = '10px 20px';
+            messageDiv.style.borderRadius = '5px';
+            messageDiv.style.backgroundColor = type === 'error' ? '#ff4757' : '#2ed573';
+            messageDiv.style.color = 'white';
+            messageDiv.style.zIndex = '1000';
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        async function checkAndRefreshSession() {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) {
+                console.error('Error getting session:', error);
+                return false;
+            }
+            if (data.session) {
+                return true;
+            }
+            const { error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) {
+                console.error('Error refreshing session:', refreshError);
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const coursesGrid = document.getElementById('coursesGrid');
+            coursesGrid.innerHTML = '<p class="loading">Loading your courses...</p>';
+            const sessionValid = await checkAndRefreshSession();
+            if (sessionValid) {
+                loadUserCourses();
+            } else {
+                showMessage('Please log in to view your courses', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TutorConnect Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <style>
+        :root {
+            --color-background: #0a0b14;
+            --color-primary: #003060;
+            --color-secondary: #055C9D;
+            --color-tertiary: #0E86D4;
+            --color-light: #68BBE3;
+            --color-dark: #151823;
+            --color-glass: rgba(255, 255, 255, 0.1);
+            --border-radius: 20px;
+            --spacing: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .nav-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 1200px;
+            z-index: 1000;
+            padding: 10px 15px;
+            background: rgba(21, 24, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+            transition: all 0.3s ease;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--color-tertiary), var(--color-secondary));
+            border-radius: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--color-light);
+        }
+
+        .search-bar {
+            position: relative;
+            width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(14, 134, 212, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .google-signin {
+            background: #4285F4;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .google-signin:hover {
+            background: #3367D6;
+        }
+
+        .menu-button {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(21, 24, 35, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1001;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .mobile-menu.active {
+            display: flex;
+        }
+
+        .mobile-menu .logo {
+            margin-bottom: 20px;
+        }
+
+        .mobile-menu .nav-links {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mobile-menu .nav-link {
+            font-size: 18px;
+            padding: 10px 0;
+        }
+
+        .mobile-menu .search-bar {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .mobile-menu .google-signin {
+            margin-top: 20px;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .main-content {
+            padding-top: 100px;
+        }
+
+        .section {
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-dark));
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path fill="%230E86D4" d="M39.9,-65.7C54.1,-60.5,69.3,-54,77.9,-42.5C86.4,-31,88.3,-15.5,85.7,-1.5C83.1,12.5,76,25,67.7,36.3C59.4,47.6,49.8,57.7,38.1,64.9C26.4,72.1,13.2,76.4,-0.7,77.5C-14.6,78.7,-29.1,76.8,-41.6,70.1C-54.1,63.4,-64.5,52,-71.5,38.8C-78.5,25.5,-82.1,10.3,-79.9,-3.8C-77.8,-17.8,-69.9,-30.8,-60.1,-37.1C-50.3,-43.4,-38.5,-43,-28.1,-47.9C-17.7,-52.8,-8.8,-63,2.8,-68.1C14.5,-73.2,29,-71,39.9,-65.7Z" transform="translate(100 100)" /></svg>') no-repeat center center;
+            opacity: 0.1;
+            transform: scale(2);
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff, var(--color-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 25px;
+        }
+
+        .scroll-section {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .scroll-section::-webkit-scrollbar {
+            display: none;
+        }
+
+        .course-grid {
+            display: inline-flex;
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff, var(--color-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .course-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 300px;
+            flex-shrink: 0;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .course-image {
+            height: 150px;
+            background: linear-gradient(135deg, var(--color-secondary), var(--color-tertiary));
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .course-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path fill="%23FFFFFF" d="M39.9,-65.7C54.1,-60.5,69.3,-54,77.9,-42.5C86.4,-31,88.3,-15.5,85.7,-1.5C83.1,12.5,76,25,67.7,36.3C59.4,47.6,49.8,57.7,38.1,64.9C26.4,72.1,13.2,76.4,-0.7,77.5C-14.6,78.7,-29.1,76.8,-41.6,70.1C-54.1,63.4,-64.5,52,-71.5,38.8C-78.5,25.5,-82.1,10.3,-79.9,-3.8C-77.8,-17.8,-69.9,-30.8,-60.1,-37.1C-50.3,-43.4,-38.5,-43,-28.1,-47.9C-17.7,-52.8,-8.8,-63,2.8,-68.1C14.5,-73.2,29,-71,39.9,-65.7Z" transform="translate(100 100)" /></svg>') no-repeat center center;
+            opacity: 0.1;
+        }
+
+        .course-content {
+            padding: 20px;
+        }
+
+        .course-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .course-name {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-size: 0.9rem;
+            white-space: normal;
+        }
+
+        .course-specialization {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-size: 0.9rem;
+            white-space: normal;
+        }
+        .course-schedule {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-size: 0.9rem;
+            white-space: normal;
+        }
+        .course-experience {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-size: 0.9rem;
+            white-space: normal;
+        }
+
+        .course-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .course-price {
+            color: var(--color-tertiary);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .course-rating {
+            color: #FFD700;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-tertiary), var(--color-secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(14, 134, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #error-message {
+            background-color: rgba(255, 0, 0, 0.1);
+            color: #ff6b6b;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                top: 10px;
+                width: calc(100% - 20px);
+                padding: 10px;
+            }
+
+            .nav-content {
+                justify-content: space-between;
+            }
+
+            .nav-links, .search-bar, .google-signin {
+                display: none;
+            }
+
+            .menu-button {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+                padding: 0 20px;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .course-card {
+                width: 250px;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* New styles for auth modal */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            z-index: 1002;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+        }
+
+        .auth-content {
+            background-color: var(--color-dark);
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid var(--color-glass);
+            width: 300px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--color-glass);
+            color: white;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--color-tertiary);
+            color: white;
+            cursor: pointer;
+        }
+
+        .auth-form button:hover {
+            background-color: var(--color-secondary);
+        }
+
+        .auth-toggle {
+            color: var(--color-light);
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* New styles for user initial circle and dropdown */
+        .user-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--color-tertiary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 50px;
+            background-color: var(--color-dark);
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .user-dropdown a:hover {
+            background-color: var(--color-glass);
+        }
+
+        #loadingAnimation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tutor-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        /* Footer styles */
+        .footer {
+            background-color: var(--color-dark);
+            padding: 60px 0 20px;
+            margin-top: 60px;
+            border-top: 1px solid var(--color-glass);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .footer-section p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: var(--color-light);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-glass);
+        }
+
+        .footer-bottom p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                padding: 40px 20px 20px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .footer-section {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingAnimation" style="display: none;">
+        <dotlottie-player src="https://lottie.host/a81ef307-7531-4580-b3ce-5369195af9de/g88KkRKAdW.lottie" background="transparent" speed="1" style="width: 300px; height: 300px" loop autoplay></dotlottie-player>
+    </div>
+    <nav class="nav-container">
+        <div class="nav-content">
+            <a href="#" class="logo">
+                <div class="logo-icon"></div>
+                <span>TutorConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">HOME</a>
+                <a href="tutors.html" class="nav-link">FIND TUTORS</a>
+                <a href="registertutor.html" class="nav-link">BECOME A TUTOR</a>
+            </div>
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search...">
+            </div>
+            <button class="google-signin">Sign in with Google</button>
+            <div class="user-circle" style="display: none;"></div>
+            <div class="user-dropdown">
+                <a href="#" id="logoutButton">Logout</a>
+            </div>
+            <button class="menu-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <div class="mobile-menu">
+        <button class="close-menu">&times;</button>
+        <a href="#" class="logo">
+            <div class="logo-icon"></div>
+            <span>TutorConnect</span>
+        </a>
+        <div class="nav-links">
+            <a href="home.html" class="nav-link">HOME</a>
+            <a href="tutors.html" class="nav-link">FIND TUTORS</a>
+            <a href="registertutor.html" class="nav-link">BECOME A TUTOR</a>
+        </div>
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search...">
+        </div>
+        <button class="google-signin">Sign in with Google</button>
+    </div>
+
+    <main class="main-content">
+        <section class="hero section">
+            <div class="container hero-content">
+                <h1 class="animated">Transform Your Learning Journey</h1>
+                <p class="animated">Connect with expert tutors and unlock your potential through personalized learning experiences.</p>
+                <a href="tutors.html" class="btn btn-primary animated">Find Your Perfect Tutor</a>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Top-Rated Tutors</h2>
+                <div id="error-message"></div>
+                <div class="scroll-section">
+                    <div id="tutorGrid" class="course-grid">
+                        <!-- Tutors will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Anticipated Courses</h2>
+                <div class="scroll-section">
+                    <div id="anticipatedCoursesGrid" class="course-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Demanded Courses</h2>
+                <div class="scroll-section">
+                    <div id="demandedCoursesGrid" class="course-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Programming Courses</h2>
+                <div class="scroll-section">
+                    <div id="programmingCoursesGrid" class="course-grid"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TutorConnect</h3>
+                    <p>Empowering learning through personalized connections.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="tutors.html">Find Tutors</a></li>
+                        <li><a href="registertutor.html">Become a Tutor</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="60131510100f1214201415140f12030f0e0e0503144e030f0d">[email&#160;protected]</a></p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 TutorConnect. All rights reserved. Transforming education through technology.</p>
+            </div>
+        </div>
+    </footer>
+    <div id="authModal" class="auth-modal">
+        <div class="auth-content">
+            <span class="close">&times;</span>
+            <form id="authForm" class="auth-form">
+                <h2 id="authTitle">Sign In</h2>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <input type="text" id="name" placeholder="Full Name" style="display: none;">
+                <input type="tel" id="phone" placeholder="Phone Number (IND, USA, AUS)" style="display: none;">
+                <input type="text" id="grade" placeholder="Grade" style="display: none;">
+                <button type="submit" id="submitBtn">Submit</button>
+                <p id="newUserToggle" class="auth-toggle">New user? Sign up</p>
+            </form>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        const SUPABASE_URL = 'https://qjdpzaezmtsdnnxuphim.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqZHB6YWV6bXRzZG5ueHVwaGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwODQyNzcsImV4cCI6MjA0NjY2MDI3N30.1lCVZaxUsm3uROyKtErN9fYr1KxtaY9yj0jNv1k7WmY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function fetchTutors(displayType) {
+            try {
+                const { data, error } = await supabase
+                    .from('alltutor')
+                    .select('*')
+                    .eq('display', displayType);
+
+                if (error) throw error;
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${displayType} tutors:`, error);
+                throw error;
+            }
+        }
+
+        function getScheduleText(tutor) {
+            if (tutor.schedule) {
+                return tutor.schedule;
+            }
+            return 'Schedule not available';
+        }
+
+        function getPriceText(tutor) {
+            if (tutor.initial_price) {
+                return `$${tutor.initial_price}/45min`;
+            }
+            return 'Price not available';
+        }
+
+        function getRatingText(tutor) {
+            if(typeof tutor.rating === 'number') {
+                return tutor.rating.toFixed(1);
+            }
+            return 'N/A';
+        }
+
+        function displayTutors(tutors, elementId) {
+            const tutorGrid = document.getElementById(elementId);
+            tutorGrid.innerHTML = tutors.map(tutor => `
+        <div class="course-card">
+            <a href="tutor-details.html?id=${tutor.id}" class="tutor-link">
+                <div class="course-image" style="background-image: url('${tutor.image_url || 'https://via.placeholder.com/300x150'}')">
+                </div>
+                <div class="course-content">
+                    <h3 class="course-title">${tutor.specialization}</h3>
+                    <p class="course-name">${tutor.name}</p>
+                    <p class="course-schedule">${tutor.schedule_type || 'Schedule not available'}</p>
+                    <p class="course-experience">${tutor.experience} years of experience</p>
+                    <div class="course-meta">
+                        <span class="course-price">${getPriceText(tutor)}</span>
+                        <span class="course-rating">★★★★★ ${getRatingText(tutor)}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+            `).join('');
+        }
+
+        async function initializePage() {
+            const errorElement = document.getElementById('error-message');
+
+            try {
+                document.getElementById('loadingAnimation').style.display = 'flex';
+
+                const topRatedTutors = await fetchTutors('toprated');
+                displayTutors(topRatedTutors, 'tutorGrid');
+
+                const anticipatedTutors = await fetchTutors('anticipated');
+                displayTutors(anticipatedTutors, 'anticipatedCoursesGrid');
+
+                const demandedTutors = await fetchTutors('demanded');
+                displayTutors(demandedTutors, 'demandedCoursesGrid');
+
+                const programmingTutors = await fetchTutors('programming');
+                displayTutors(programmingTutors, 'programmingCoursesGrid');
+
+                errorElement.style.display = 'none';
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                errorElement.textContent = `Error loading content: ${error.message}`;
+                errorElement.style.display = 'block';
+            } finally {
+                document.getElementById('loadingAnimation').style.display = 'none';
+            }
+        }
+
+        // Mobile menu functionality
+        const menuButton = document.querySelector('.menu-button');
+        const closeMenuButton = document.querySelector('.close-menu');
+        const mobileMenu = document.querySelector('.mobile-menu');
+
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.add('active');
+        });
+
+        closeMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.remove('active');
+        });
+
+        // Auth functionality
+        const authModal = document.getElementById('authModal');
+        const authForm = document.getElementById('authForm');
+        const authTitle = document.getElementById('authTitle');
+        const nameInput = document.getElementById('name');
+        const phoneInput = document.getElementById('phone');
+        const gradeInput = document.getElementById('grade');
+        const submitBtn = document.getElementById('submitBtn');
+        const newUserToggle = document.getElementById('newUserToggle');
+        const googleSignInBtn = document.querySelector('.google-signin');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const userCircle = document.querySelector('.user-circle');
+        const userDropdown = document.querySelector('.user-dropdown');
+        const logoutButton = document.getElementById('logoutButton');
+
+        let isSignUp = false;
+
+        googleSignInBtn.onclick = function() {
+            authModal.style.display = 'block';
+        }
+
+        closeBtn.onclick = function() {
+            authModal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == authModal) {
+                authModal.style.display = 'none';
+            }
+        }
+
+        newUserToggle.onclick = function() {
+            isSignUp = !isSignUp;
+            if (isSignUp) {
+                authTitle.textContent = 'Sign Up';
+                nameInput.style.display = 'block';
+                phoneInput.style.display = 'block';
+                gradeInput.style.display = 'block';
+                submitBtn.textContent = 'Sign Up';
+                newUserToggle.textContent = 'Already have an account? Sign in';
+            } else {
+                authTitle.textContent = 'Sign In';
+                nameInput.style.display = 'none';
+                phoneInput.style.display = 'none';
+                gradeInput.style.display = 'none';
+                submitBtn.textContent = 'Sign In';
+                newUserToggle.textContent = 'New user? Sign up';
+            }
+        }
+
+        authForm.onsubmit = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (isSignUp) {
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                const grade = document.getElementById('grade').value;
+                try {
+                    const { data: authData, error: authError } = await supabase.auth.signUp({
+                        email,
+                        password,
+                    });
+                    if (authError) throw authError;
+
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .insert([
+                            { 
+                                email, 
+                                name, 
+                                phone, 
+                                grade
+                            }
+                        ]);
+                    if (userError) throw userError;
+
+                    alert('Sign up successful! Please check your email for verification.');
+                } catch (error) {
+                    console.error('Error signing up:', error);
+                    alert('Error signing up: ' + error.message);
+                }
+            } else {
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    if (error) throw error;
+
+                    console.log('Login successful:', data);
+                    updateUIAfterLogin(data.user);
+                } catch (error) {
+                    console.error('Error signing in:', error);
+                    alert('Error signing in: ' + error.message);
+                }
+            }
+        }
+
+        function updateUIAfterLogin(user) {
+            authModal.style.display = 'none';
+            googleSignInBtn.style.display = 'none';
+            userCircle.style.display = 'flex';
+            userCircle.textContent = user.email[0].toUpperCase();
+        }
+
+        userCircle.onclick = function() {
+            userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        logoutButton.onclick = async function() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                updateUIAfterLogout();
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Error signing out: ' + error.message);
+            }
+        }
+
+        function updateUIAfterLogout() {
+            userCircle.style.display = 'none';
+            userDropdown.style.display = 'none';
+            googleSignInBtn.style.display = 'block';
+            location.reload(); // Reload the page to reset the state
+        }
+
+        // Check for existing session on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                console.log('Current session:', session);
+                if (session) {
+                    updateUIAfterLogin(session.user);
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+            }
+            initializePage();
+        });
+    </script>
+</body>
+</html>
+
